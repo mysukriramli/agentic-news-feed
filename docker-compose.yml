@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  news-pipeline:
+    build: .
+    command: ["python", "-m", "agent_news.pipeline"]
+    volumes:
+      - news_data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/news.db
+      - POLL_INTERVAL_SECONDS=900
+      - GDELT_ENABLED=true
+      - RSS_ENABLED=true
+    restart: unless-stopped
+
+  mcp-server:
+    build: .
+    command: ["python", "-m", "agent_news.server"]
+    volumes:
+      - news_data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/news.db
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - news-pipeline
+
+volumes:
+  news_data:
